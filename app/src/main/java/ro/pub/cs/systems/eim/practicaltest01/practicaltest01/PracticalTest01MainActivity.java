@@ -13,8 +13,11 @@ import android.widget.EditText;
 
 public class PracticalTest01MainActivity extends AppCompatActivity {
 
-    Button firstButton, secondButton;
-    EditText firstEditText, secondEditText;
+    private static final String FIRST_VALUE_SAVED = "first_value_saved";
+    private static final String SECOND_VALUE_SAVED= "second_value_saved";
+
+    private Button firstButton, secondButton;
+    private EditText firstEditText, secondEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,5 +77,23 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            firstEditText.setText(savedInstanceState.getString(FIRST_VALUE_SAVED, ""));
+            secondEditText.setText(savedInstanceState.getString(SECOND_VALUE_SAVED, ""));
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(FIRST_VALUE_SAVED, firstEditText.getText().toString());
+        outState.putString(SECOND_VALUE_SAVED, secondEditText.getText().toString());
+
     }
 }
