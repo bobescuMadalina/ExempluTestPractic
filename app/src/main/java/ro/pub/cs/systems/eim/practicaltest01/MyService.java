@@ -16,7 +16,7 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //
+
         Integer firstValue = Integer.valueOf(intent.getStringExtra("first_value"));
         Integer secondValue = Integer.valueOf(intent.getStringExtra("second_value"));
         thread = new MyThread(getApplicationContext(), firstValue, secondValue);

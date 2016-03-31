@@ -1,6 +1,10 @@
 package ro.pub.cs.systems.eim.practicaltest01.practicaltest01;
 
+import android.app.IntentService;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,17 +18,29 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import ro.pub.cs.systems.eim.practicaltest01.MyService;
 import ro.pub.cs.systems.eim.practicaltest01.PracticalTest01SecondaryActivity;
 
-public class PracticalTest01MainActivity extends AppCompatActivity {
+public class PracticalTest01MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private static final String FIRST_VALUE_SAVED = "first_value_saved";
     private static final String SECOND_VALUE_SAVED= "second_value_saved";
     private final static int SECONDARY_ACTIVITY_REQUEST_CODE = 1;
 
+    IntentFilter intentFilter = new IntentFilter();
+
 
     private Button firstButton, secondButton, navigateToNext;
     private EditText firstEditText, secondEditText;
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("APP_TAG", intent.getStringExtra("message"));
+        }
+    };
+
+    private boolean serviceNotStart = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +50,8 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
         initViews();
 
         addListeners();
+
+        intentFilter.addAction(Constants.MY_ACTION);
 
     }
 
@@ -47,31 +65,11 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
     }
 
     private void addListeners() {
-        firstButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String numberString = firstEditText.getText().toString();
-                firstEditText.setText(String.valueOf(Integer.valueOf(numberString) + 1));
-            }
-        });
+        firstButton.setOnClickListener(this);
 
-        secondButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String numberString = secondEditText.getText().toString();
-                secondEditText.setText(String.valueOf(Integer.valueOf(numberString) + 1));
-            }
-        });
+        secondButton.setOnClickListener(this);
 
-        navigateToNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), PracticalTest01SecondaryActivity.class);
-                intent.putExtra("number_of_clicks", String.valueOf(Integer.valueOf(firstEditText.getText().toString()) +
-                Integer.valueOf(secondEditText.getText().toString())));
-                startActivityForResult(intent, SECONDARY_ACTIVITY_REQUEST_CODE);
-            }
-        });
+        navigateToNext.setOnClickListener(this);
     }
 
 
@@ -124,5 +122,57 @@ public class PracticalTest01MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        String numberString1 = firstEditText.getText().toString();
+        String numberString2 = secondEditText.getText().toString();
+        switch(v.getId()) {
+            case R.id.first_button:
+                verifyAndStartService(numberString1, numberString2);
+                firstEditText.setText(String.valueOf(Integer.valueOf(numberString1) + 1));
+                break;
+            case R.id.second_button:
+                verifyAndStartService(numberString1, numberString2);
+                secondEditText.setText(String.valueOf(Integer.valueOf(numberString2) + 1));
+                break;
+            case R.id.navigate_to_next:
+                Intent intent = new Intent(getApplicationContext(), PracticalTest01SecondaryActivity.class);
+                intent.putExtra("number_of_clicks", String.valueOf(Integer.valueOf(firstEditText.getText().toString()) +
+                        Integer.valueOf(secondEditText.getText().toString())));
+                startActivityForResult(intent, SECONDARY_ACTIVITY_REQUEST_CODE);
+        }
+    }
+
+
+    public void verifyAndStartService(String str1, String str2) {
+        if ((Integer.valueOf(str1) + Integer.valueOf(str2) > 6) &&
+                serviceNotStart) {
+            Intent intent = new Intent(getApplicationContext(), MyService.class);
+            intent.putExtra("first_value", str1);
+            intent.putExtra("second_value", str2);
+            getApplicationContext().startService(intent);
+            serviceNotStart = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Intent intent = new Intent(this, MyService.class);
+        stopService(intent);
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(broadcastReceiver);
+        super.onPause();
     }
 }

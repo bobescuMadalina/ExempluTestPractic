@@ -9,6 +9,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <service android:name="ro.pub.cs.systems.eim.practicaltest01.MyService"
+            android:exported="false"
+            android:enabled="true"/>
 
         <activity
             android:name=".PracticalTest01MainActivity"
